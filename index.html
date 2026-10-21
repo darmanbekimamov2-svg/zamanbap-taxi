@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ky">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Заманбап Такси — Кадамжай</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--navy:#10243a;--blue:#1677ff;--bg:#f3f6fb;--green:#18a058}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#172334}
+header{background:var(--navy);color:#fff;padding:18px 5%;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{font-size:22px;font-weight:800}.brand span{color:#71c6ff}header small{display:block;color:#c7d5e5;margin-top:4px}
+nav{display:flex;gap:8px;flex-wrap:wrap}button,.tab{border:0;border-radius:10px;padding:11px 14px;cursor:pointer;font-weight:700}
+nav button{background:#263d55;color:white}nav button.active{background:var(--blue)}
+main{max-width:1120px;margin:24px auto;padding:0 16px}.intro{background:linear-gradient(120deg,#0e3152,#1677ff);color:white;border-radius:20px;padding:25px;margin-bottom:18px}
+.intro h1{margin:0 0 8px;font-size:clamp(24px,4vw,36px)}.intro p{margin:0;color:#e2efff}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}.card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 5px 22px #17324d0b;margin-bottom:18px}
+h2{margin:0 0 16px;font-size:20px}label{display:block;font-size:14px;font-weight:700;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #d6deea;border-radius:10px;font:inherit;background:#fff}
+.primary{background:var(--blue);color:#fff;width:100%;margin-top:15px}.muted{color:#607187;font-size:13px;line-height:1.5}
+#map{height:300px;border-radius:12px;overflow:hidden;background:#e2eaf3}.pill{display:inline-block;padding:5px 9px;border-radius:20px;background:#e8f4ff;color:#075db8;font-size:12px;font-weight:700}
+.order{border:1px solid #e2e8f0;padding:13px;border-radius:12px;margin:10px 0}.order strong{display:block;margin-bottom:6px}.order p{margin:5px 0;font-size:14px}
+.hidden{display:none}.success{padding:12px;background:#e8fff1;color:#08763a;border-radius:10px;margin-top:12px}.warning{padding:12px;background:#fff5dc;color:#775100;border-radius:10px;margin-top:12px}
+footer{text-align:center;color:#6d7b8c;padding:25px;font-size:13px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}header{padding:16px}.intro{padding:20px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">🚕 Заманбап <span>Такси</span><small>Кадамжай району</small></div>
+ <nav>
+  <button class="active" data-view="customer">Кардар</button>
+  <button data-view="driver">Айдоочу</button>
+  <button data-view="dispatcher">Диспетчер</button>
+ </nav>
+</header>
+<main>
+ <section class="intro"><h1>Такси чакыруу — оңой жана тез</h1><p>Кадамжай району үчүн жергиликтүү такси кызматынын демо-сайты.</p></section>
+ <section id="customer" class="view">
+  <div class="grid">
+   <div class="card">
+    <h2>🚖 Такси чакыруу</h2>
+    <form id="booking">
+     <label>Атыңыз</label><input id="customerName" required placeholder="Атыңызды жазыңыз">
+     <label>Телефон номери</label><input id="phone" required type="tel" placeholder="+996 ...">
+     <label>Кайдан алып кетсин?</label><input id="pickup" required placeholder="Мисалы: Кадамжай борбору">
+     <label>Кайда барасыз?</label><input id="destination" required placeholder="Бара турган дарек">
+     <label>Төлөм түрү</label><select id="payment"><option value="Накталай">Накталай</option><option value="О!Деньги (интеграция керек)">О!Деньги (онлайн төлөм кийин кошулат)</option></select>
+     <button class="primary" type="submit">Такси чакыруу</button>
+    </form>
+    <div id="bookingMessage"></div>
+    <p class="muted">Демо-нуска: заказдар ушул браузердин сактагычында гана турат. Бул азырынча чыныгы диспетчерге же айдоочуга жөнөтүлбөйт.</p>
+   </div>
+   <div class="card"><h2>📍 Карта</h2><div id="map"></div><p class="muted">Карта OpenStreetMap аркылуу жүктөлөт. Даректерди формага кол менен жазыңыз; автоматтык маршрут/геокоддоо азырынча кошула элек.</p></div>
+  </div>
+ </section>
+ <section id="driver" class="view hidden">
+  <div class="card"><h2>🚗 Айдоочу бөлүмү</h2><p class="muted">Бул демо-бөлүмдө жаңы заказдарды көрүп, алардын абалын өзгөртүүгө болот. Чыныгы колдонууда айдоочунун аккаунту жана коопсуз кирүү талап кылынат.</p><div id="driverOrders"></div></div>
+ </section>
+ <section id="dispatcher" class="view hidden">
+  <div class="card"><h2>🧭 Диспетчер бөлүмү</h2><p class="muted">Демо-нускадагы заказдардын тизмеси. Коомдук сайтка чыгарууда диспетчер бөлүмүн сырсөз менен коргоо керек.</p><div id="dispatchOrders"></div></div>
+ </section>
+</main>
+<footer>© 2026 Заманбап Такси · Кадамжай району · Демо-нуска</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const key='zamanbapTaxiDemoOrders';
+function readOrders(){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}}
+function saveOrders(x){localStorage.setItem(key,JSON.stringify(x))}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));
+ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('hidden',v.id!==b.dataset.view));
+ if(b.dataset.view==='driver'||b.dataset.view==='dispatcher')renderOrders();
+ if(b.dataset.view==='customer'&&window.taxiMap)setTimeout(()=>taxiMap.invalidateSize(),100);
+}));
+document.getElementById('booking').addEventListener('submit',e=>{
+ e.preventDefault();
+ const order={id:Date.now(),name:document.getElementById('customerName').value.trim(),phone:document.getElementById('phone').value.trim(),pickup:document.getElementById('pickup').value.trim(),destination:document.getElementById('destination').value.trim(),payment:document.getElementById('payment').value,status:'Жаңы заказ',created:new Date().toLocaleString('ky-KG')};
+ const orders=readOrders();orders.unshift(order);saveOrders(orders);
+ document.getElementById('bookingMessage').innerHTML='<div class="success">Демо-заказ түзүлдү! Номери: '+order.id.toString().slice(-6)+'.</div>';
+ e.target.reset();
+});
+function renderOrders(){
+ const orders=readOrders();
+ const empty='<p class="muted">Азырынча заказ жок. Кардар бөлүмүнөн тест заказ түзүңүз.</p>';
+ document.getElementById('driverOrders').innerHTML=orders.length?orders.map(o=>orderCard(o,true)).join(''):empty;
+ document.getElementById('dispatchOrders').innerHTML=orders.length?orders.map(o=>orderCard(o,false)).join(''):empty;
+}
+function orderCard(o,driver){
+ const opts=['Жаңы заказ','Айдоочу кабыл алды','Кардардан алып кетүүдө','Жолго чыкты','Бүткөрүлдү','Жокко чыгарылды'];
+ return '<div class="order"><strong>Заказ #'+String(o.id).slice(-6)+' <span class="pill">'+escapeHTML(o.status)+'</span></strong><p><b>Кардар:</b> '+escapeHTML(o.name)+' · '+escapeHTML(o.phone)+'</p><p><b>Маршрут:</b> '+escapeHTML(o.pickup)+' → '+escapeHTML(o.destination)+'</p><p><b>Төлөм:</b> '+escapeHTML(o.payment)+'</p><p class="muted">'+escapeHTML(o.created)+'</p>'+(driver?'<label>Заказдын абалы</label><select onchange="updateStatus('+o.id+',this.value)">'+opts.map(s=>'<option '+(s===o.status?'selected':'')+'>'+s+'</option>').join('')+'</select>':'')+'</div>';
+}
+function updateStatus(id,status){const orders=readOrders().map(o=>o.id===id?{...o,status}:o);saveOrders(orders);renderOrders()}
+if(window.L){const taxiMap=L.map('map').setView([40.12,71.72],10);window.taxiMap=taxiMap;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(taxiMap);L.marker([40.12,71.72]).addTo(taxiMap).bindPopup('Кадамжай району').openPopup();}
+</script>
+</body>
+</html>
