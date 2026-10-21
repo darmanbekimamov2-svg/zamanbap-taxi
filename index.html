@@ -94,5 +94,17 @@ function orderCard(o,driver){
 function updateStatus(id,status){const orders=readOrders().map(o=>o.id===id?{...o,status}:o);saveOrders(orders);renderOrders()}
 if(window.L){const taxiMap=L.map('map').setView([40.12,71.72],10);window.taxiMap=taxiMap;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(taxiMap);L.marker([40.12,71.72]).addTo(taxiMap).bindPopup('Кадамжай району').openPopup();}
 </script>
-</body>
+</body><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://kcbjdznshvfzirnkubzc.supabase.co/rest/v1/";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_FxVrXVkuxgNemRymmMo1-A_aRU7La7Y";
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  console.log("Supabase туташтыруусу даяр");
+</script>
 </html>
