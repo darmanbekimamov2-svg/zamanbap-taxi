@@ -45,7 +45,11 @@ footer{text-align:center;color:#6d7b8c;padding:25px;font-size:13px}
      <label>Телефон номери</label><input id="phone" required type="tel" placeholder="+996 ...">
      <label>Кайдан алып кетсин?</label><input id="pickup" required placeholder="Мисалы: Кадамжай борбору">
      <label>Кайда барасыз?</label><input id="destination" required placeholder="Бара турган дарек">
-     <label>Төлөм түрү</label><select id="payment"><option value="Накталай">Накталай</option><option value="О!Деньги (интеграция керек)">О!Деньги (онлайн төлөм кийин кошулат)</option></select>
+      <label>Төлөм түрү</label>
+<select id="payment" required>
+  <option value="cash">Накталай</option>
+  <option value="o_money">О!Деньги</option>
+</select>
      <button class="primary" type="submit">Такси чакыруу</button>
     </form>
     <div id="bookingMessage"></div>
@@ -94,17 +98,63 @@ function orderCard(o,driver){
 function updateStatus(id,status){const orders=readOrders().map(o=>o.id===id?{...o,status}:o);saveOrders(orders);renderOrders()}
 if(window.L){const taxiMap=L.map('map').setView([40.12,71.72],10);window.taxiMap=taxiMap;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(taxiMap);L.marker([40.12,71.72]).addTo(taxiMap).bindPopup('Кадамжай району').openPopup();}
 </script>
-</body><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body> 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  const SUPABASE_URL = "https://kcbjdznshvfzirnkubzc.supabase.co/rest/v1/";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_FxVrXVkuxgNemRymmMo1-A_aRU7La7Y";
+  const SUPABASE_URL =
+    "https://kcbjdznshvfzirnkubzc.supabase.co";
 
-  const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_FxVrXVkuxgNemRymmMo1-A_aRU7La7Y";
 
-  console.log("Supabase туташтыруусу даяр");
+  const TAXI_FUNCTION_URL =
+    SUPABASE_URL + "/functions/v1/create-order";
+
+  document.getElementById("booking").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const button = this.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.textContent = "Жөнөтүлүүдө...";
+
+    const order = {
+      customer_name: document.getElementById("customerName").value.trim(),
+      customer_phone: document.getElementById("phone").value.trim(),
+      pickup_address: document.getElementById("pickup").value.trim(),
+      destination_address: document.getElementById("destination").value.trim(),
+      payment_method: document.getElementById("payment").value
+    };
+
+    try {
+      const response = await fetch(TAXI_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_PUBLISHABLE_KEY
+        },
+        body: JSON.stringify(order)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "HTTP " + response.status);
+      }
+
+      alert("Буйрутма кабыл алынды! Номери: " + result.order.id);
+      this.reset();
+    } catch (error) {
+      console.error("Буйрутма катасы:", error);
+      alert("Буйрутма жөнөтүлгөн жок. Ката: " + error.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Такси чакыруу";
+    }
+  });
 </script>
+
+</body>
 </html>
+
+
