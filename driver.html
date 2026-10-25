@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ky">
 <head>
@@ -36,14 +35,13 @@
   <h3>Айдоочу бөлүмү</h3>
 
   <form id="loginForm">
-    <input id="email" type="email"
-      placeholder="Электрондук почта" required>
-    <input id="password" type="password"
-      placeholder="Сырсөз" required>
+    <input id="email" type="email" placeholder="Электрондук почта" required>
+    <input id="password" type="password" placeholder="Сырсөз" required>
     <button type="submit">Кирүү</button>
   </form>
 
   <p id="message">Айдоочу аккаунтуңуз менен кириңиз.</p>
+
   <section id="profile" hidden>
     <h3>Айдоочу профили</h3>
     <p id="driverInfo"></p>
@@ -51,54 +49,69 @@
   </section>
 
   <script type="module">
-    import { createClient } from
-      'https://esm.sh/@supabase/supabase-js@2';
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    const SUPABASE_URL = 'https://kcbjdznshvfzirnkubzc.supabase.co/rest/v1/';
+    const SUPABASE_URL = 'https://kcbjdznshvfzirnkubzc.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_FxVrXVkuxgNemRymmMo1-A_aRU7La7Y';
 
-    const supabase = createClient(
-      SUPABASE_URL, SUPABASE_KEY
-    );
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
 
     const form = document.getElementById('loginForm');
     const message = document.getElementById('message');
     const profile = document.getElementById('profile');
 
     async function showDriver(user) {
-      const { data, error } = await supabase
-        .from('users')
-        .select('full_name, phone, role')
-        .eq('id', user.id)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('full_name, phone, role')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (error) {
-        message.textContent = 'Маалымат алуу катасы: ' + error.message;
-        return;
+        if (error) {
+          message.textContent = 'Маалымат алуу катасы: ' + error.message;
+          return;
+        }
+
+        if (!data) {
+          message.textContent = 'Айдоочунун профили табылган жок.';
+          return;
+        }
+
+        if (data.role !== 'driver') {
+          message.textContent = 'Бул аккаунт айдоочу эмес.';
+          return;
+        }
+
+        form.hidden = true;
+        profile.hidden = false;
+        document.getElementById('driverInfo').textContent =
+          'Аты: ' + (data.full_name || 'Толтурула элек') +
+          ' | Телефон: ' + (data.phone || 'Толтурула элек') +
+          ' | Ролу: ' + data.role;
+
+        message.textContent = 'Ийгиликтүү кирдиңиз!';
+      } catch (e) {
+        message.textContent = 'Күтүлбөгөн катасы: ' + e.message;
       }
-
-      if (!data || data.role !== 'driver') {
-        message.textContent =
-          'Айдоочунун профили табылган жок же ролу туура эмес.';
-        return;
-      }
-
-      form.hidden = true;
-      profile.hidden = false;
-      document.getElementById('driverInfo').textContent =
-        'Аты: ' + (data.full_name || 'Толтурула элек') +
-        ' | Телефон: ' + (data.phone || 'Толтурула элек') +
-        ' | Ролу: ' + data.role;
-      message.textContent = 'Ийгиликтүү кирдиңиз!';
     }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       message.textContent = 'Текшерилүүдө...';
 
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: document.getElementById('email').value.trim(),
-        password: document.getElementById('password').value
+        email,
+        password
       });
 
       if (error) {
@@ -109,19 +122,28 @@
       await showDriver(data.user);
     });
 
-    document.getElementById('logout')
-      .addEventListener('click', async () => {
-        await supabase.auth.signOut();
-        profile.hidden = true;
-        form.hidden = false;
-        message.textContent = 'Системадан чыктыңыз.';
-      });
+    document.getElementById('logout').addEventListener('click', async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        message.textContent = 'Чыгуу катасы: ' + error.message;
+        return;
+      }
 
-    const { data: { session } } =
-      await supabase.auth.getSession();
+      profile.hidden = true;
+      form.hidden = false;
+      form.reset();
+      message.textContent = 'Системадан чыктыңыз.';
+    });
 
-    if (session) await showDriver(session.user);
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      message.textContent = 'Сессия текшерүү катасы: ' + sessionError.message;
+    }
+
+    if (session?.user) {
+      await showDriver(session.user);
+    }
   </script>
 </body>
 </html>
-
