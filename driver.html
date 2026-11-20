@@ -1,302 +1,135 @@
+
 <!DOCTYPE html>
 <html lang="ky">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Заманбап Такси — Айдоочу</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f6fa;
-      margin: 0;
-      padding: 30px;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 14px;
-      padding: 24px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    }
-    h1, h2, h3 { margin-top: 0; }
-    .auth-box, .dashboard {
-      display: none;
-    }
-    .auth-box.active, .dashboard.active {
-      display: block;
-    }
-    input, button, select {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 10px;
-      border: 1px solid #d6dbe3;
-      font-size: 16px;
-    }
-    button {
-      background: #0d8b5d;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button.secondary {
-      background: #2f2f2f;
-    }
-    .order-card {
-      border: 1px solid #e3e8ef;
-      border-radius: 12px;
-      padding: 16px;
-      margin: 14px 0;
-      background: #fafcff;
-    }
-    .status {
-      display: inline-block;
-      background: #eaf7f1;
-      color: #0d7a53;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    #message {
-      margin: 12px 0;
-      color: #345;
-      min-height: 22px;
-    }
-    .muted {
-      color: #677787;
-      font-size: 14px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Заманбап Такси — Айдоочу</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial;background:#f1f5f9;margin:0;padding:20px}
+.container{max-width:650px;margin:30px auto;background:white;padding:22px;border-radius:15px}
+h2{text-align:center;color:#1677cc}
+input,button{width:100%;padding:13px;margin:8px 0;box-sizing:border-box;border-radius:8px}
+input{border:1px solid #ccc}
+button{background:#1677cc;color:white;border:0;font-weight:bold;cursor:pointer}
+.order{border:1px solid #ddd;padding:15px;margin:12px 0;border-radius:10px}
+.hidden{display:none}
+#message{color:#d33;text-align:center}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div id="authBox" class="auth-box active">
-      <h1>🚕 Заманбап Такси</h1>
-      <h3>Айдоочу кирүү</h3>
+<div class="container">
+<h2>🚕 Заманбап Такси</h2>
+<h3>Айдоочунун бөлүмү</h3>
 
-      <form id="loginForm">
-        <input id="email" type="email" placeholder="Электрондук почта" required />
-        <input id="password" type="password" placeholder="Сырсөз" required />
-        <button type="submit">Кирүү</button>
-      </form>
+<div id="login">
+<input id="email" type="email" placeholder="Email">
+<input id="password" type="password" placeholder="Сырсөз">
+<button onclick="login()">Кирүү</button>
+</div>
 
-      <p id="message"></p>
-    </div>
+<div id="dashboard" class="hidden">
+<p id="driver"></p>
+<button onclick="loadOrders()">Буйрутмаларды жаңылоо</button>
+<div id="orders"></div>
+<button onclick="logout()">Чыгуу</button>
+</div>
 
-    <div id="dashboard" class="dashboard">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
-        <div>
-          <h2>Айдоочу панели</h2>
-          <p id="driverLabel" class="muted"></p>
-        </div>
-        <button id="logoutBtn" class="secondary" type="button">Чыгуу</button>
-      </div>
+<p id="message"></p>
+</div>
 
-      <h3>Жаңы заказдар</h3>
-      <div id="ordersList"></div>
-    </div>
-  </div>
+<script>
+const SUPABASE_URL = "https://kcbjdznshvfzirnkubzc.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_FxVrXVkuxgNemRymmMo1-A_aRU7La7Y";
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
 
-    const SUPABASE_URL = 'https://kcbjdznshvfzirnkubzc.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_FxVrXVkuxgNemRymmMo1-A_aRU7La7Y';
+const message = document.getElementById("message");
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
+async function login(){
+  message.textContent = "Кирүү текшерилүүдө...";
+  const {data,error} = await db.auth.signInWithPassword({
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value
+  });
+  if(error){message.textContent=error.message;return;}
+  showDashboard(data.user);
+}
 
-    const authBox = document.getElementById('authBox');
-    const dashboard = document.getElementById('dashboard');
-    const loginForm = document.getElementById('loginForm');
-    const message = document.getElementById('message');
-    const ordersList = document.getElementById('ordersList');
-    const driverLabel = document.getElementById('driverLabel');
+async function showDashboard(user){
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("driver").textContent="Айдоочу: "+user.email;
+  await loadOrders();
+}
 
-    function setMessage(text) {
-      message.textContent = text;
-    }
+async function loadOrders(){
+  const {data,error}=await db.from("orders")
+    .select("*")
+    .eq("status","pending")
+    .is("driver_id",null)
+    .order("created_at",{ascending:false});
 
-    function showDashboard() {
-      authBox.classList.remove('active');
-      dashboard.classList.add('active');
-    }
+  if(error){message.textContent=error.message;return;}
 
-    function showAuth() {
-      dashboard.classList.remove('active');
-      authBox.classList.add('active');
-    }
+  const area=document.getElementById("orders");
+  area.innerHTML="";
 
-    async function loadDriverProfile(user) {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, full_name, phone, role')
-        .eq('id', user.id)
-        .maybeSingle();
+  if(!data.length){area.textContent="Азырынча жаңы буйрутма жок";return;}
 
-      if (error) {
-        console.error('Profile error:', error);
-        setMessage('Маалымат алуу катасы: ' + error.message);
-        return null;
-      }
+  data.forEach(order=>{
+    const div=document.createElement("div");
+    div.className="order";
+    const info=document.createElement("p");
+    info.textContent=
+      "Буйрутма №"+order.id+
+      "\nКардар: "+order.customer_name+
+      "\nТелефон: "+order.customer_phone+
+      "\nКайдан: "+order.pickup_address+
+      "\nКайда: "+order.destination_address+
+      "\nТөлөм: "+order.payment_method+
+      "\nБаасы: "+(order.fare ?? "Белгисиз");
+    div.appendChild(info);
 
-      if (!data) {
-        setMessage('Айдоочунун профили табылган жок.');
-        return null;
-      }
+    const btn=document.createElement("button");
+    btn.textContent="Буйрутманы кабыл алуу";
+    btn.onclick=()=>acceptOrder(order.id,btn);
+    div.appendChild(btn);
+    area.appendChild(div);
+  });
+}
 
-      if (String(data.role || '').toLowerCase() !== 'driver') {
-        setMessage('Бул аккаунт айдоочу эмес.');
-        return null;
-      }
+async function acceptOrder(id,btn){
+  btn.disabled=true;
+  const {data,error}=await db.rpc("accept_order",{order_id:id});
+  if(error){
+    message.textContent=error.message;
+    btn.disabled=false;
+    return;
+  }
+  if(data===true){
+    message.textContent="Буйрутма кабыл алынды!";
+  }else{
+    message.textContent="Бул буйрутманы башка айдоочу кабыл алган болушу мүмкүн.";
+  }
+  await loadOrders();
+}
 
-      driverLabel.textContent = 'Айдоочу: ' + (data.full_name || 'Номи') + ' | ' + (data.phone || 'Телефон жок');
-      return data;
-    }
+async function logout(){
+  await db.auth.signOut();
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+}
 
-    async function loadOrders() {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Orders fetch error:', error);
-        ordersList.innerHTML = '<p class="muted">Заказдар жүктөлгөн жок.</p>';
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        ordersList.innerHTML = '<p class="muted">Азырынча заказ жок.</p>';
-        return;
-      }
-
-      ordersList.innerHTML = data.map(order => `
-        <div class="order-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-            <h3>Заказ #${order.id}</h3>
-            <span class="status">${order.status}</span>
-          </div>
-          <p><strong>Кардар:</strong> ${order.customer_name}</p>
-          <p><strong>Телефон:</strong> ${order.customer_phone}</p>
-          <p><strong>Кайдан:</strong> ${order.pickup_address}</p>
-          <p><strong>Кайда:</strong> ${order.destination_address}</p>
-          <p><strong>Төлөм:</strong> ${order.payment_method}</p>
-          <select data-order-id="${order.id}">
-            <option value="Жаңы заказ" ${order.status === 'Жаңы заказ' ? 'selected' : ''}>Жаңы заказ</option>
-            <option value="Айдоочу кабыл алды" ${order.status === 'Айдоочу кабыл алды' ? 'selected' : ''}>Айдоочу кабыл алды</option>
-            <option value="Кардардан алып кетүүдө" ${order.status === 'Кардардан алып кетүүдө' ? 'selected' : ''}>Кардардан алып кетүүдө</option>
-            <option value="Жолго чыкты" ${order.status === 'Жолго чыкты' ? 'selected' : ''}>Жолго чыкты</option>
-            <option value="Бүткөрүлдү" ${order.status === 'Бүткөрүлдү' ? 'selected' : ''}>Бүткөрүлдү</option>
-            <option value="Жокко чыгарылды" ${order.status === 'Жокко чыгарылды' ? 'selected' : ''}>Жокко чыгарылды</option>
-          </select>
-          <button type="button" data-action="update-status" data-order-id="${order.id}" style="margin-top:10px;">Статус жаңыртуу</button>
-        </div>
-      `).join('');
-    }
-
-    async function updateOrderStatus(orderId, status) {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('Update status error:', error);
-        setMessage('Статус жаңыртуу катасы: ' + error.message);
-        return;
-      }
-
-      setMessage('Статус жаңыртылды.');
-      await loadOrders();
-    }
-
-    document.addEventListener('click', async function (event) {
-      const target = event.target;
-      if (!target.matches('[data-action="update-status"]')) return;
-
-      const orderId = Number(target.dataset.orderId);
-      const select = document.querySelector(`select[data-order-id="${orderId}"]`);
-      if (!select) return;
-
-      const status = select.value;
-      await updateOrderStatus(orderId, status);
-    });
-
-    loginForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      setMessage('Текшерилүүдө...');
-
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        setMessage('Кирүү катасы: ' + error.message);
-        return;
-      }
-
-      const profile = await loadDriverProfile(data.user);
-
-      if (!profile) return;
-
-      showDashboard();
-      setMessage('Ийгиликтүү кирдиңиз!');
-      await loadOrders();
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        setMessage('Чыгуу катасы: ' + error.message);
-        return;
-      }
-
-      showAuth();
-      loginForm.reset();
-      setMessage('Системадан чыктыңыз.');
-    });
-
-    async function checkSession() {
-      const { data: { session }, error } = await supabase.auth.getSession();
-
-      if (error) {
-        setMessage('Сессия катасы: ' + error.message);
-        return;
-      }
-
-      if (!session?.user) {
-        showAuth();
-        setMessage('Айдоочу аккаунтуңуз менен кириңиз.');
-        return;
-      }
-
-      const profile = await loadDriverProfile(session.user);
-
-      if (!profile) {
-        showAuth();
-        return;
-      }
-
-      showDashboard();
-      setMessage('Ийгиликтүү кирдиңиз!');
-      await loadOrders();
-    }
-
-    checkSession();
-  </script>
+async function init(){
+  const {data}=await db.auth.getSession();
+  if(data.session) await showDashboard(data.session.user);
+}
+init();
+</script>
 </body>
 </html>
