@@ -64,8 +64,18 @@ async function showDashboard(user){
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("driver").textContent="Айдоочу: "+user.email;
+
+  startGpsTracking(user);
+  await loadOrders();
+}async function showDashboard(user){
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("driver").textContent="Айдоочу: "+user.email;
+
+  startGpsTracking(user);
   await loadOrders();
 }
+  
 
 async function loadOrders(){
   const {data,error}=await db.from("orders")
