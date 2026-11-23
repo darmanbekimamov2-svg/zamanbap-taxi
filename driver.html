@@ -31,6 +31,7 @@ button{background:#1677cc;color:white;border:0;font-weight:bold;cursor:pointer}
 
 <div id="dashboard" class="hidden">
 <p id="driver"></p>
+<p id="gpsStatus">GPS текшерилүүдө...</p>
 <button onclick="loadOrders()">Буйрутмаларды жаңылоо</button>
 <div id="orders"></div>
 <button onclick="logout()">Чыгуу</button>
@@ -63,11 +64,11 @@ let gpsWatchId = null;
 
 function startGpsTracking(user) {
   if (!navigator.geolocation) {
-    message.textContent = "GPS жеткиликсиз";
+    document.getElementById("gpsStatus").textContent = "GPS жеткиликсиз";
     return;
   }
 
-  message.textContent = "GPS уруксаты суралууда...";
+ document.getElementById("gpsStatus").textContent = "GPS уруксаты суралууда...";
 
   gpsWatchId = navigator.geolocation.watchPosition(
     async (position) => {
@@ -84,13 +85,13 @@ function startGpsTracking(user) {
         }, { onConflict: "user_id" });
 
       if (error) {
-        message.textContent = "GPS катасы: " + error.message;
+      document.getElementById("gpsStatus").textContent = "GPS катасы: " + error.message;
       } else {
-        message.textContent = "GPS иштеп жатат";
+       document.getElementById("gpsStatus").textContent = "GPS иштеп жатат";
       }
     },
     (error) => {
-      message.textContent = "GPS катасы: " + error.message;
+      document.getElementById("gpsStatus").textContent = "GPS катасы: " + error.message;
     },
     {
       enableHighAccuracy: true,
