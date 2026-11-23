@@ -59,15 +59,48 @@ async function login(){
   if(error){message.textContent=error.message;return;}
   showDashboard(data.user);
 }
+let gpsWatchId = null;
+
+function startGpsTracking(user) {
+  if (!navigator.geolocation) {
+    message.textContent = "GPS жеткиликсиз";
+    return;
+  }
+
+  message.textContent = "GPS уруксаты суралууда...";
+
+  gpsWatchId = navigator.geolocation.watchPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+
+      const { error } = await db
+        .from("driver_locations")
+        .upsert({
+          user_id: user.id,
+          latitude,
+          longitude,
+          is_available: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "user_id" });
+
+      if (error) {
+        message.textContent = "GPS катасы: " + error.message;
+      } else {
+        message.textContent = "GPS иштеп жатат";
+      }
+    },
+    (error) => {
+      message.textContent = "GPS катасы: " + error.message;
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 15000
+    }
+  );
+}
 
 async function showDashboard(user){
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("driver").textContent="Айдоочу: "+user.email;
-
-  startGpsTracking(user);
-  await loadOrders();
-}async function showDashboard(user){
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("driver").textContent="Айдоочу: "+user.email;
