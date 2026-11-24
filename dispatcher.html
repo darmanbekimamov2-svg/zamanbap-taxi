@@ -186,23 +186,25 @@ async function assignDriver(orderId){
     return;
   }
 
-  const { error } = await db
-    .from("orders")
-    .update({
-      driver_id: driverId,
-      status: "accepted"
-    })
-    .eq("id", orderId)
-    .eq("status", "pending");
+  const { data, error } = await db.rpc("assign_order", {
+    order_id: orderId,
+    assigned_driver_id: driverId
+  });
 
   if(error){
     alert("Ката: " + error.message);
     return;
   }
 
-  alert("Буйрутма айдоочуга бекитилди!");
+  if(!data){
+    alert("Буйрутма табылган жок же мурда бекитилген!");
+    return;
+  }
+
+  alert("Буйрутма айдоочуга ийгиликтүү бекитилди!");
   await loadOrders();
 }
+
 async function logout(){
 await db.auth.signOut();
 location.reload();
