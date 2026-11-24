@@ -59,6 +59,7 @@ async function login(){
   });
   if(error){message.textContent=error.message;return;}
   showDashboard(data.user);
+  console.log("DASHBOARD АЧЫЛДЫ");
 }
 let gpsWatchId = null;
 
