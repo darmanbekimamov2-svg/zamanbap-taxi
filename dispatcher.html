@@ -106,7 +106,12 @@ async function loadDriverLocations(){
     }else{
       driverMarkers[driver.user_id] =
         L.marker(position).addTo(map)
-          .bindPopup("Айдоочу");
+          .bindPopup(
+  "Айдоочу ID: " + driver.user_id +
+  "<br>Кеңдик: " + driver.latitude +
+  "<br>Узундук: " + driver.longitude +
+  "<br>Жаңыртылды: " + new Date(driver.updated_at).toLocaleTimeString()
+);
     }
   });
 }
