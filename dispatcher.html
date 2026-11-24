@@ -70,7 +70,43 @@ document.getElementById("dashboard").classList.remove("hidden");
 document.getElementById("dispatcher").textContent="Диспетчер: "+user.email;
 await loadOrders();
 }
+let map;
+let driverMarkers = {};
 
+function initMap(){
+  if(map) return;
+
+  map = L.map("map").setView([40.1, 71.7], 11);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap"
+  }).addTo(map);
+}
+
+async function loadDriverLocations(){
+  if(!map) initMap();
+
+  const {data,error} = await db
+    .from("driver_locations")
+    .select("*");
+
+  if(error){
+    message.textContent = "GPS катасы: " + error.message;
+    return;
+  }
+
+  data.forEach(driver=>{
+    const position = [driver.latitude, driver.longitude];
+
+    if(driverMarkers[driver.user_id]){
+      driverMarkers[driver.user_id].setLatLng(position);
+    }else{
+      driverMarkers[driver.user_id] =
+        L.marker(position).addTo(map)
+          .bindPopup("Айдоочу");
+    }
+  });
+}
 async function loadOrders(){
 const {data,error}=await db.from("orders")
 .select("*").order("created_at",{ascending:false});
