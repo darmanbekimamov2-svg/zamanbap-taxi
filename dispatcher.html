@@ -102,6 +102,11 @@ const { data: drivers } = await db
   }
 
   data.forEach(driver=>{
+   const driverInfo = drivers?.find(
+  item => item.user_id === driver.user_id
+);
+
+const driverName = driverInfo?.full_name || "Аты белгисиз";
     const position = [driver.latitude, driver.longitude];
 
     if(driverMarkers[driver.user_id]){
