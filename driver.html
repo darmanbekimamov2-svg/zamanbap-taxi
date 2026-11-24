@@ -101,15 +101,25 @@ console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
     }
   );
 }
-
 async function showDashboard(user){
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("driver").textContent="Айдоочу: "+user.email;
 
+  let gpsStatus = document.getElementById("gpsStatus");
+
+  if (!gpsStatus) {
+    gpsStatus = document.createElement("p");
+    gpsStatus.id = "gpsStatus";
+    document.getElementById("driver").after(gpsStatus);
+  }
+
+  gpsStatus.textContent = "GPS башталууда...";
+
   startGpsTracking(user);
   await loadOrders();
 }
+
   
 
 async function loadOrders(){
