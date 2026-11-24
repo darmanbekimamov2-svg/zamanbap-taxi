@@ -1,1 +1,104 @@
 
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Заманбап Такси — Диспетчер</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial;background:#f2f4f7;padding:20px}
+.container{max-width:800px;margin:auto;background:white;padding:20px;border-radius:12px}
+input,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box}
+button{background:#1677e8;color:white;border:0;border-radius:6px}
+.hidden{display:none}
+.order{padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Заманбап Такси — Диспетчер</h2>
+
+<div id="login">
+<input id="email" type="email" placeholder="Электрондук почта">
+<input id="password" type="password" placeholder="Сырсөз">
+<button onclick="login()">Кирүү</button>
+<p id="message"></p>
+</div>
+
+<div id="dashboard" class="hidden">
+<p id="dispatcher"></p>
+<button onclick="loadOrders()">Буйрутмаларды жаңылоо</button>
+<div id="orders"></div>
+<button onclick="logout()">Чыгуу</button>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL="https://kcbjdznshvfzirnkubzc.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="БУЛ ЖЕРГЕ PUBLISHABLE KEY КОЙ";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const message=document.getElementById("message");
+
+async function login(){
+message.textContent="Кирүү текшерилүүдө...";
+const {data,error}=await db.auth.signInWithPassword({
+email:document.getElementById("email").value.trim(),
+password:document.getElementById("password").value
+});
+if(error){message.textContent=error.message;return;}
+await showDashboard(data.user);
+}
+
+async function showDashboard(user){
+const {data:role,error}=await db.from("user_roles")
+.select("role").eq("user_id",user.id).single();
+
+if(error || role.role!=="dispatcher"){
+message.textContent="Бул аккаунт диспетчер эмес.";
+await db.auth.signOut();
+return;
+}
+
+document.getElementById("login").classList.add("hidden");
+document.getElementById("dashboard").classList.remove("hidden");
+document.getElementById("dispatcher").textContent="Диспетчер: "+user.email;
+await loadOrders();
+}
+
+async function loadOrders(){
+const {data,error}=await db.from("orders")
+.select("*").order("created_at",{ascending:false});
+
+if(error){message.textContent=error.message;return;}
+
+const area=document.getElementById("orders");
+area.innerHTML="";
+
+data.forEach(order=>{
+const div=document.createElement("div");
+div.className="order";
+div.textContent="Буйрутма №"+order.id+
+" | Кардар: "+order.customer_name+
+" | Телефон: "+order.customer_phone+
+" | Кайдан: "+order.pickup_address+
+" | Кайда: "+order.destination_address+
+" | Абалы: "+order.status;
+area.appendChild(div);
+});
+}
+
+async function logout(){
+await db.auth.signOut();
+location.reload();
+}
+
+async function init(){
+const {data}=await db.auth.getSession();
+if(data.session) await showDashboard(data.session.user);
+}
+init();
+</script>
+</body>
+</html>
+
