@@ -115,7 +115,7 @@ const driverName = driverInfo?.full_name || "Аты белгисиз";
       driverMarkers[driver.user_id] =
         L.marker(position).addTo(map)
           .bindPopup(
-  "Айдоочу ID: " + driver.user_id +
+  "Айдоочу: " + driverName +
   "<br>Кеңдик: " + driver.latitude +
   "<br>Узундук: " + driver.longitude +
   "<br>Жаңыртылды: " + new Date(driver.updated_at).toLocaleTimeString()
