@@ -115,6 +115,9 @@ console.log("Айдоочулар:", drivers);
 
 const driverName = driverInfo?.full_name || "Аты белгисиз";
     const position = [driver.latitude, driver.longitude];
+   const driverStatus = driver.is_available
+  ? "Бош айдоочу"
+  : "Буйрутмада";
 
     if(driverMarkers[driver.user_id]){
       driverMarkers[driver.user_id].setLatLng(position);
