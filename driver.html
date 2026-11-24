@@ -69,7 +69,7 @@ function startGpsTracking(user) {
   }
 
  document.getElementById("gpsStatus").textContent = "GPS уруксаты суралууда...";
-
+console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
   gpsWatchId = navigator.geolocation.watchPosition(
     async (position) => {
       const { latitude, longitude } = position.coords;
