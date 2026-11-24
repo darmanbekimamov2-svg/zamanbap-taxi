@@ -139,14 +139,37 @@ const {data,error}=await db.from("orders")
 .select("*").order("created_at",{ascending:false});
 
 if(error){message.textContent=error.message;return;}
+const { data: drivers, error: driversError } = await db
+  .from("user_roles")
+  .select("user_id, full_name")
+  .eq("role", "driver");
 
+if (driversError) {
+  message.textContent = driversError.message;
+  return;
+}
 const area=document.getElementById("orders");
 area.innerHTML="";
 
 data.forEach(order=>{
+ let driverOptions = '<option value="">Айдоочу тандаңыз</option>';
+
+drivers.forEach(driver => {
+  driverOptions += `<option value="${driver.user_id}">${driver.full_name}</option>`;
+});
 const div=document.createElement("div");
 div.className="order";
-div.textContent="Буйрутма №"+order.id+
+div.innerHTML =
+  "<b>Буйрутма №" + order.id + "</b><br>" +
+  "Кардар: " + order.customer_name + "<br>" +
+  "Телефон: " + order.customer_phone + "<br>" +
+  "Кайдан: " + order.pickup_address + "<br>" +
+  "Кайда: " + order.destination_address + "<br>" +
+  "Абалы: " + order.status + "<br>" +
+  "<select id='driver-" + order.id + "'>" +
+  driverOptions +
+  "</select>" +
+  "<button onclick='assignDriver(" + order.id + ")'>Айдоочуга бекитүү</button>";
 " | Кардар: "+order.customer_name+
 " | Телефон: "+order.customer_phone+
 " | Кайдан: "+order.pickup_address+
@@ -155,7 +178,31 @@ div.textContent="Буйрутма №"+order.id+
 area.appendChild(div);
 });
 }
+async function assignDriver(orderId){
+  const driverId = document.getElementById("driver-" + orderId).value;
 
+  if(!driverId){
+    alert("Айдоочуну тандаңыз!");
+    return;
+  }
+
+  const { error } = await db
+    .from("orders")
+    .update({
+      driver_id: driverId,
+      status: "accepted"
+    })
+    .eq("id", orderId)
+    .eq("status", "pending");
+
+  if(error){
+    alert("Ката: " + error.message);
+    return;
+  }
+
+  alert("Буйрутма айдоочуга бекитилди!");
+  await loadOrders();
+}
 async function logout(){
 await db.auth.signOut();
 location.reload();
