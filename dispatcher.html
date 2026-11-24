@@ -92,10 +92,17 @@ async function loadDriverLocations(){
   const {data,error} = await db
     .from("driver_locations")
     .select("*");
-const { data: drivers } = await db
+const { data: drivers, error: driversError } = await db
   .from("user_roles")
   .select("user_id, full_name")
   .eq("role", "driver");
+
+if (driversError) {
+  message.textContent = "Айдоочу катасы: " + driversError.message;
+  return;
+}
+
+console.log("Айдоочулар:", drivers);
   if(error){
     message.textContent = "GPS катасы: " + error.message;
     return;
