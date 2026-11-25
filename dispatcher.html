@@ -151,6 +151,9 @@ async function loadDriverLocations(){
     }
   });
 }
+ setInterval(() => {
+  loadDriverLocations();
+}, 5000);
 
 async function loadOrders(){
 const {data,error}=await db.from("orders")
