@@ -160,6 +160,11 @@ const {data,error}=await db.from("orders")
 .select("*").order("created_at",{ascending:false});
 
 if(error){message.textContent=error.message;return;}
+ console.log("Базадан келген буйрутмалар:", data.map(o => ({
+  id: o.id,
+  status: o.status,
+  driver_id: o.driver_id
+})));
 const { data: drivers, error: driversError } = await db
   .from("user_roles")
   .select("user_id, full_name")
