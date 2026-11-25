@@ -28,7 +28,20 @@ button{background:#1677cc;color:white;border:0;font-weight:bold;cursor:pointer}
 <input id="password" type="password" placeholder="Сырсөз">
 <button onclick="login()">Кирүү</button>
 </div>
+<div id="stats" style="display:none;">
+  <h3>📊 Менин көрсөткүчтөрүм</h3>
 
+  <p>Бүгүнкү киреше:
+    <b id="dailyIncome">0 сом</b>
+  </p>
+
+  <p>Аткарылган буйрутмалар:
+    <b id="completedCount">0</b>
+  </p>
+
+  <h3>📋 Буйрутмалар тарыхы</h3>
+  <div id="history"></div>
+</div>
 <div id="dashboard" class="hidden">
 <p id="driver"></p>
 <p id="gpsStatus">GPS текшерилүүдө...</p>
@@ -116,8 +129,35 @@ async function showDashboard(user){
 
   gpsStatus.textContent = "GPS башталууда...";
 
-  startGpsTracking(user);
-  await loadOrders();
+ startGpsTracking(user);
+await loadOrders();
+await loadDriverStats(user);
+}
+
+async function loadDriverStats(user){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const {data,error} = await db.from("orders")
+    .select("fare,status,created_at")
+    .eq("driver_id",user.id)
+    .eq("status","completed")
+    .gte("created_at",today.toISOString());
+
+  if(error){
+    message.textContent=error.message;
+    return;
+  }
+
+  const income = data.reduce(
+    (sum,order)=>sum+Number(order.fare || 0),0
+  );
+
+  document.getElementById("dailyIncome").textContent =
+    income.toFixed(2)+" сом";
+
+  document.getElementById("completedCount").textContent =
+    data.length;
 }
 
 async function loadOrders(){
