@@ -198,6 +198,32 @@ async function acceptOrder(id,btn){
   await loadOrders();
 }
 
+async function updateOrderStatus(id, status, btn){
+  btn.disabled = true;
+
+  const {data: {user}} = await db.auth.getUser();
+
+  if(!user){
+    message.textContent = "Аккаунтка кайра кириңиз";
+    btn.disabled = false;
+    return;
+  }
+
+  const {error} = await db.from("orders")
+    .update({status: status})
+    .eq("id", id)
+    .eq("driver_id", user.id);
+
+  if(error){
+    message.textContent = error.message;
+    btn.disabled = false;
+    return;
+  }
+
+  message.textContent = "Буйрутманын абалы өзгөрдү!";
+  await loadOrders();
+}
+
 async function logout(){
   await db.auth.signOut();
   document.getElementById("dashboard").classList.add("hidden");
