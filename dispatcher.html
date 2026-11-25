@@ -171,6 +171,7 @@ const { data: drivers, error: driversError } = await db
   .eq("role", "driver");
 
 if (driversError) {
+  console.error("Айдоочулар катасы:", driversError);
   message.textContent = driversError.message;
   return;
 }
