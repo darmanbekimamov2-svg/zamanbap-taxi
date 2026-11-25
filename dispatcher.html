@@ -155,28 +155,77 @@ async function loadDriverLocations(){
   loadDriverLocations();
 }, 5000);
 
+
 async function loadOrders(){
-const {data,error}=await db.from("orders")
-.select("*").order("created_at",{ascending:false});
+  const {data,error}=await db.from("orders")
+    .select("*").order("created_at",{ascending:false});
 
-if(error){message.textContent=error.message;return;}
- console.log("Базадан келген буйрутмалар:", data.map(o => ({
-  id: o.id,
-  status: o.status,
-  driver_id: o.driver_id
-})));
-const { data: drivers, error: driversError } = await db
-  .from("user_roles")
-  .select("user_id, full_name")
-  .eq("role", "driver");
+  if(error){
+    message.textContent=error.message;
+    return;
+  }
 
-if (driversError) {
-  console.error("Айдоочулар катасы:", driversError);
-  message.textContent = driversError.message;
-  return;
+  const {data:drivers,error:driversError}=await db
+    .from("user_roles")
+    .select("user_id,full_name")
+    .eq("role","driver");
+
+  if(driversError){
+    message.textContent=driversError.message;
+    return;
+  }
+
+  const area=document.getElementById("orders");
+  area.innerHTML="";
+
+  const groups={
+    pending:"🟡 Жаңы буйрутмалар",
+    accepted:"🟠 Кабыл алынган",
+    on_the_way:"🔵 Жолдо",
+    arrived:"🟣 Кардарга жеткен",
+    completed:"🟢 Аткарылган"
+  };
+
+  Object.keys(groups).forEach(status=>{
+    const heading=document.createElement("h3");
+    heading.textContent=groups[status];
+    area.appendChild(heading);
+
+    const statusOrders=data.filter(
+      order=>order.status===status
+    );
+
+    if(statusOrders.length===0){
+      const empty=document.createElement("p");
+      empty.textContent="Буйрутма жок";
+      area.appendChild(empty);
+    }
+
+    statusOrders.forEach(order=>{
+      let driverOptions='<option value="">Айдоочу тандаңыз</option>';
+
+      drivers.forEach(driver=>{
+        driverOptions+=`<option value="${driver.user_id}">${driver.full_name}</option>`;
+      });
+
+      const div=document.createElement("div");
+      div.className="order";
+
+      div.innerHTML=
+        "<b>Буйрутма №"+order.id+"</b><br>"+
+        "Кардар: "+order.customer_name+"<br>"+
+        "Телефон: "+order.customer_phone+"<br>"+
+        "Кайдан: "+order.pickup_address+"<br>"+
+        "Кайда: "+order.destination_address+"<br>"+
+        "Абалы: "+order.status+"<br>"+
+        "<select id='driver-"+order.id+"'>"+
+        driverOptions+"</select>"+
+        "<button onclick='assignDriver("+order.id+")'>Айдоочуга бекитүү</button>";
+
+      area.appendChild(div);
+    });
+  });
 }
-const area=document.getElementById("orders");
-area.innerHTML="";
 
 data.forEach(order=>{
  let driverOptions = '<option value="">Айдоочу тандаңыз</option>';
