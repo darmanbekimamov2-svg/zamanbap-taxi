@@ -117,6 +117,7 @@ console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
 async function showDashboard(user){
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("stats").style.display = "block";
   document.getElementById("driver").textContent="Айдоочу: "+user.email;
 
   let gpsStatus = document.getElementById("gpsStatus");
@@ -132,6 +133,7 @@ async function showDashboard(user){
  startGpsTracking(user);
 await loadOrders();
 await loadDriverStats(user);
+await loadDriverHistory(user);
 }
 
 async function loadDriverStats(user){
@@ -158,6 +160,43 @@ async function loadDriverStats(user){
 
   document.getElementById("completedCount").textContent =
     data.length;
+}
+
+async function loadDriverHistory(user){
+  const {data,error} = await db.from("orders")
+    .select("id,customer_name,pickup_address,destination_address,fare,created_at")
+    .eq("driver_id",user.id)
+    .eq("status","completed")
+    .order("created_at",{ascending:false});
+
+  const history = document.getElementById("history");
+  history.innerHTML = "";
+
+  if(error){
+    history.textContent = error.message;
+    return;
+  }
+
+  if(!data.length){
+    history.textContent = "Азырынча аткарылган буйрутма жок";
+    return;
+  }
+
+  data.forEach(order=>{
+    const div = document.createElement("div");
+    div.className = "order";
+
+    const info = document.createElement("p");
+    info.textContent =
+      "№"+order.id+
+      "\nКардар: "+order.customer_name+
+      "\nКайдан: "+order.pickup_address+
+      "\nКайда: "+order.destination_address+
+      "\nБаасы: "+(order.fare ?? "Белгисиз")+" сом";
+
+    div.appendChild(info);
+    history.appendChild(div);
+  });
 }
 
 async function loadOrders(){
