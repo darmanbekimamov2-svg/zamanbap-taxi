@@ -167,25 +167,21 @@ async function loadOrders(){
       const label=document.createElement("p");
       label.textContent="Диспетчер бул буйрутманы сизге бекитти";
       div.appendChild(label);
-      
-  const steps = [
-    ["Жолго чыктым", "on_the_way"],
-    ["Кардарга жеттим", "arrived"],
-    ["Аткарылды", "completed"]
-  ];
+      const nextSteps = {
+  accepted: ["Жолго чыктым", "on_the_way"],
+  on_the_way: ["Кардарга жеттим", "arrived"],
+  arrived: ["Аткарылды", "completed"]
+};
 
-  steps.forEach(([title, status]) => {
-    if(
-  (status === "on_the_way" && order.status === "accepted") ||
-  (status === "arrived" && order.status === "on_the_way") ||
-  (status === "completed" && order.status === "arrived")
-){
-      const btn = document.createElement("button");
-      btn.textContent = title;
-      btn.onclick = () => updateOrderStatus(order.id, status, btn);
-      div.appendChild(btn);
-    }
-  });
+const next = nextSteps[order.status];
+
+if(next){
+  const btn = document.createElement("button");
+  btn.textContent = next[0];
+  btn.onclick = () =>
+    updateOrderStatus(order.id, next[1], btn);
+  div.appendChild(btn);
+}
 
     }else{
       const btn=document.createElement("button");
