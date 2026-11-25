@@ -94,8 +94,9 @@ console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
           user_id: user.id,
           latitude,
           longitude,
-          is_available: true,
-          updated_at: new Date().toISOString()
+         is_available: true,
+
+updated_at: new Date().toISOString()
         }, { onConflict: "user_id" });
 
       if (error) {
@@ -287,11 +288,27 @@ async function acceptOrder(id,btn){
   }
   if(data===true){
     message.textContent="Буйрутма кабыл алынды!";
+
+    const {data: {user}} = await db.auth.getUser();
+
+    const {error: statusError} = await db
+      .from("driver_locations")
+      .update({
+        status: "accepted",
+        is_available: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq("user_id", user.id);
+
+    if(statusError){
+      message.textContent += " Статус катасы: " + statusError.message;
+    }
   }else{
     message.textContent="Бул буйрутманы башка айдоочу кабыл алган болушу мүмкүн.";
   }
   await loadOrders();
 }
+
 
 async function updateOrderStatus(id, status, btn){
   btn.disabled = true;
@@ -315,8 +332,29 @@ async function updateOrderStatus(id, status, btn){
     return;
   }
 
+  const isCompleted = status === "completed";
+
+  const {error: locationError} = await db
+    .from("driver_locations")
+    .update({
+      status: isCompleted ? "available" : status,
+      is_available: isCompleted,
+      updated_at: new Date().toISOString()
+    })
+    .eq("user_id", user.id);
+
+  if(locationError){
+    message.textContent =
+      "Буйрутма жаңырды, бирок карта статусунда ката: " +
+      locationError.message;
+    btn.disabled = false;
+    return;
+  }
+
   message.textContent = "Буйрутманын абалы өзгөрдү!";
   await loadOrders();
+  await loadDriverStats(user);
+  await loadDriverHistory(user);
 }
 
 async function logout(){
