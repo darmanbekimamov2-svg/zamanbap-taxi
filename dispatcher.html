@@ -53,6 +53,13 @@ password:document.getElementById("password").value
 });
 if(error){message.textContent=error.message;return;}
 await showDashboard(data.user);
+ if (window.orderTimer) {
+  clearInterval(window.orderTimer);
+}
+
+window.orderTimer = setInterval(() => {
+  loadOrders();
+}, 5000);
 }
 
 async function showDashboard(user){
