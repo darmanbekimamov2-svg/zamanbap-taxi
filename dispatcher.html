@@ -86,54 +86,72 @@ function initMap(){
   }).addTo(map);
 }
 
+
 async function loadDriverLocations(){
   if(!map) initMap();
 
   const {data,error} = await db
     .from("driver_locations")
     .select("*");
-const { data: drivers, error: driversError } = await db
-  .from("user_roles")
-  .select("user_id, full_name")
-  .eq("role", "driver");
 
-if (driversError) {
-  message.textContent = "Айдоочу катасы: " + driversError.message;
-  return;
-}
-
-console.log("Айдоочулар:", drivers);
   if(error){
     message.textContent = "GPS катасы: " + error.message;
     return;
   }
 
-  data.forEach(driver=>{
-   const driverInfo = drivers?.find(
-  item => item.user_id === driver.user_id
-);
+  const {data: drivers, error: driversError} = await db
+    .from("user_roles")
+    .select("user_id, full_name")
+    .eq("role","driver");
 
-const driverName = driverInfo?.full_name || "Аты белгисиз";
-    const position = [driver.latitude, driver.longitude];
-   const driverStatus = driver.is_available
-  ? "Бош айдоочу"
-  : "Буйрутмада";
+  if(driversError){
+    message.textContent = "Айдоочу катасы: " + driversError.message;
+    return;
+  }
+
+  const statusNames = {
+    available: "🟢 Бош айдоочу",
+    accepted: "🟠 Буйрутма кабыл алды",
+    on_the_way: "🔵 Жолго чыкты",
+    arrived: "🟣 Кардарга жетти"
+  };
+
+  data.forEach(driver=>{
+    const driverInfo = drivers?.find(
+      item => item.user_id === driver.user_id
+    );
+
+    const driverName = driverInfo?.full_name || "Аты белгисиз";
+
+    const position = [
+      driver.latitude,
+      driver.longitude
+    ];
+
+    const driverStatus =
+      statusNames[driver.status] ||
+      (driver.is_available ? "🟢 Бош айдоочу" : "Буйрутмада");
+
+    const popupText =
+      "Айдоочу: " + driverName +
+      "<br>Абалы: " + driverStatus +
+      "<br>Кеңдик: " + driver.latitude +
+      "<br>Узундук: " + driver.longitude +
+      "<br>Жаңыртылды: " +
+      new Date(driver.updated_at).toLocaleTimeString();
 
     if(driverMarkers[driver.user_id]){
       driverMarkers[driver.user_id].setLatLng(position);
+      driverMarkers[driver.user_id].setPopupContent(popupText);
     }else{
       driverMarkers[driver.user_id] =
-        L.marker(position).addTo(map)
-          .bindPopup(
-  "Айдоочу: " + driverName +
-   "<br>Абалы: " + driverStatus +     
-  "<br>Кеңдик: " + driver.latitude +
-  "<br>Узундук: " + driver.longitude +
-  "<br>Жаңыртылды: " + new Date(driver.updated_at).toLocaleTimeString()
-);
+        L.marker(position)
+          .addTo(map)
+          .bindPopup(popupText);
     }
   });
 }
+
 async function loadOrders(){
 const {data,error}=await db.from("orders")
 .select("*").order("created_at",{ascending:false});
