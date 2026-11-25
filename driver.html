@@ -130,7 +130,7 @@ async function loadOrders(){
 
   const {data,error}=await db.from("orders")
     .select("*")
-    .or(`and(status.eq.pending,driver_id.is.null),and(status.eq.accepted,driver_id.eq.${user.id})`)
+    .or(`and(status.eq.pending,driver_id.is.null),driver_id.eq.${user.id}`)
     .order("created_at",{ascending:false});
 
   if(error){
