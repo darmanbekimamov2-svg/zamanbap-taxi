@@ -151,10 +151,10 @@ async function loadDriverStats(user){
   today.setHours(0,0,0,0);
 
   const {data,error} = await db.from("orders")
-    .select("fare,status,created_at")
+   .select("fare,status,completed_at")
     .eq("driver_id",user.id)
     .eq("status","completed")
-    .gte("created_at",today.toISOString());
+    .gte("completed_at",today.toISOString());
 
   if(error){
     message.textContent=error.message;
