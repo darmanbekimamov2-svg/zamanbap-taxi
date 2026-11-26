@@ -131,10 +131,19 @@ async function showDashboard(user){
 
   gpsStatus.textContent = "GPS башталууда...";
 
- startGpsTracking(user);
+startGpsTracking(user);
 await loadOrders();
 await loadDriverStats(user);
 await loadDriverHistory(user);
+
+if (window.statsTimer) {
+  clearInterval(window.statsTimer);
+}
+
+window.statsTimer = setInterval(async () => {
+  await loadDriverStats(user);
+}, 5000);
+
 }
 
 async function loadDriverStats(user){
