@@ -70,6 +70,14 @@ document.getElementById("login").classList.add("hidden");
 document.getElementById("dashboard").classList.remove("hidden");
 document.getElementById("dispatcher").textContent="Диспетчер: "+user.email;
 await loadOrders();
+ if (window.orderTimer) {
+  clearInterval(window.orderTimer);
+}
+
+window.orderTimer = setInterval(async () => {
+  console.log("Буйрутмалар автоматтык жаңыланууда...");
+  await loadOrders();
+}, 5000);
 initMap();
 await loadDriverLocations();
 setInterval(loadDriverLocations, 10000);
