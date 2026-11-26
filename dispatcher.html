@@ -83,7 +83,15 @@ window.orderTimer = setInterval(async () => {
 initMap();
 await loadDriverLocations();
 await loadDriverSummary();
-setInterval(loadDriverLocations, 10000);
+
+if (window.driverTimer) {
+  clearInterval(window.driverTimer);
+}
+
+window.driverTimer = setInterval(async () => {
+  await loadDriverLocations();
+  await loadDriverSummary();
+}, 5000);
 }
 let map;
 let driverMarkers = {};
