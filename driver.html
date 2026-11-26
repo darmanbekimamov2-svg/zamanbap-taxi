@@ -331,7 +331,16 @@ async function updateOrderStatus(id, status, btn){
   }
 
   const {error} = await db.from("orders")
-    .update({status: status})
+   .update(
+  status === "completed"
+    ? {
+        status: status,
+        completed_at: new Date().toISOString()
+      }
+    : {
+        status: status
+      }
+)
     .eq("id", id)
     .eq("driver_id", user.id);
 
