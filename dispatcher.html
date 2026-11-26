@@ -205,16 +205,31 @@ async function loadDriverSummary(){
       order => order.driver_id === driver.user_id
     ).length;
 
-    const status = location?.status || "Белгисиз";
+   const status = location?.status || "Белгисиз";
 
-    const div = document.createElement("div");
+const statusNames = {
+  available: "🟢 Бош айдоочу",
+  accepted: "🟠 Буйрутма кабыл алды",
+  on_the_way: "🔵 Жолдо",
+  arrived: "🟣 Кардарга жетти"
+};
 
-    div.innerHTML =
-      "<b>" + (driver.full_name || "Аты белгисиз") + "</b><br>" +
-      "Абалы: " + status + "<br>" +
-      "Аткарган буйрутмалары: " + count;
+const div = document.createElement("div");
 
-    area.appendChild(div);
+div.style.padding = "12px";
+div.style.margin = "8px 0";
+div.style.borderRadius = "8px";
+div.style.background =
+  status === "available" ? "#d4edda" :
+  status === "accepted" || status === "on_the_way" || status === "arrived" ? "#ffe0b2" :
+  "#eeeeee";
+
+div.innerHTML =
+  "<b>" + (driver.full_name || "Аты белгисиз") + "</b><br>" +
+  "Абалы: " + (statusNames[status] || "Белгисиз") + "<br>" +
+  "Аткарган буйрутмалары: " + count;
+
+area.appendChild(div);
   });
 }
 
