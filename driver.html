@@ -82,8 +82,9 @@ function startGpsTracking(user) {
     return;
   }
 
- document.getElementById("gpsStatus").textContent = "GPS уруксаты суралууда...";
-console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
+  document.getElementById("gpsStatus").textContent = "GPS уруксаты суралууда...";
+  console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
+
   gpsWatchId = navigator.geolocation.watchPosition(
     async (position) => {
       const { latitude, longitude } = position.coords;
@@ -94,23 +95,20 @@ console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
           user_id: user.id,
           latitude,
           longitude,
-         
-
-updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString()
         }, { onConflict: "user_id" });
-if (error) {
-  console.log("GPS ТОЛУК КАТАСЫ:", error);
-  document.getElementById("gpsStatus").textContent =
-    "GPS катасы: " + error.message;
-} else {
-  document.getElementById("gpsStatus").textContent = "GPS иштеп жатат";
-}
+
+      if (error) {
+        console.log("GPS ТОЛУК КАТАСЫ:", error);
+        document.getElementById("gpsStatus").textContent =
+          "GPS катасы: " + error.message;
       } else {
-       document.getElementById("gpsStatus").textContent = "GPS иштеп жатат";
+        document.getElementById("gpsStatus").textContent = "GPS иштеп жатат";
       }
     },
     (error) => {
-      document.getElementById("gpsStatus").textContent = "GPS катасы: " + error.message;
+      document.getElementById("gpsStatus").textContent =
+        "GPS катасы: " + error.message;
     },
     {
       enableHighAccuracy: true,
