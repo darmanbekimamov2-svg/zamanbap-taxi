@@ -98,10 +98,12 @@ console.log("GPS ФУНКЦИЯСЫ ИШТЕДИ");
 
 updated_at: new Date().toISOString()
         }, { onConflict: "user_id" });
-
-     if (error) {
+if (error) {
   console.log("GPS ТОЛУК КАТАСЫ:", error);
-  document.getElementById("gpsStatus").textContent = "GPS катасы: " + error.message;
+  document.getElementById("gpsStatus").textContent =
+    "GPS катасы: " + error.message;
+} else {
+  document.getElementById("gpsStatus").textContent = "GPS иштеп жатат";
 }
       } else {
        document.getElementById("gpsStatus").textContent = "GPS иштеп жатат";
